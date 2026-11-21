@@ -37,22 +37,22 @@ jobs:
           ${{ steps.ollama.outputs.response }}
           RESPONSE
 
-          # Parse quote and reflection from the response using sed
-          sed -n 's/^QUOTE:\s*//p' response.txt > quote.txt
-          sed -n 's/^REFLECTION:\s*//p' response.txt > reflection.txt
+          # Debug: show full response
+          echo "===== FULL RESPONSE ====="
+          cat response.txt
+          echo "===== END RESPONSE ====="
 
-          # Debug: show what we parsed
-          echo "Quote file contents:"
-          cat quote.txt
-          echo "---"
-          echo "Reflection file contents:"
-          cat reflection.txt
-          echo "---"
+          # Parse quote and reflection - handle various whitespace patterns
+          QUOTE=$(grep -i "^QUOTE:" response.txt | sed 's/^[Qq][Uu][Oo][Tt][Ee]:[[:space:]]*//')
+          REFLECTION=$(grep -i "^REFLECTION:" response.txt | sed 's/^[Rr][Ee][Ff][Ll][Ee][Cc][Tt][Ii][Oo][Nn]:[[:space:]]*//')
+
+          echo "Parsed Quote: $QUOTE"
+          echo "Parsed Reflection: $REFLECTION"
 
           # Generate today's date in the format "Day, MM-DD-YYYY"
           TODAY_DATE=$(date '+%A, %m-%d-%Y')
 
-          # Create the email template
+          # Create the email template with inline quote and reflection
           cat > email.html << 'EOF'
           <!DOCTYPE html>
           <html lang="en">
@@ -93,18 +93,14 @@ jobs:
           </html>
           EOF
 
-          # Replace date placeholder
-          sed -i "s~TODAY_DATE_PLACEHOLDER~$TODAY_DATE~g" email.html
-          
-          # Replace placeholders using sed with temporary file for each
-          sed -i "/QUOTE_PLACEHOLDER/r quote.txt" email.html
-          sed -i "/QUOTE_PLACEHOLDER/d" email.html
-          
-          sed -i "/REFLECTION_PLACEHOLDER/r reflection.txt" email.html
-          sed -i "/REFLECTION_PLACEHOLDER/d" email.html
+          # Escape special characters for sed replacement
+          QUOTE_ESCAPED=$(printf '%s\n' "$QUOTE" | sed -e 's/[\/&]/\\&/g')
+          REFLECTION_ESCAPED=$(printf '%s\n' "$REFLECTION" | sed -e 's/[\/&]/\\&/g')
 
-          # Store the entire HTML content in a file for the action
-          cat email.html > email_body.txt
+          # Replace placeholders
+          sed -i "s~TODAY_DATE_PLACEHOLDER~$TODAY_DATE~g" email.html
+          sed -i "s~QUOTE_PLACEHOLDER~$QUOTE_ESCAPED~g" email.html
+          sed -i "s~REFLECTION_PLACEHOLDER~$REFLECTION_ESCAPED~g" email.html
 
           # Output the HTML content for use in the email action
           {
