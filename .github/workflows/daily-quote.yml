@@ -49,11 +49,13 @@ jobs:
           </html>
           EOF
           # Replace placeholder with actual quote from Ollama
-          # Escape special characters and newlines in the response
-          escaped_response=$(printf '%s\n' "${{ steps.ollama.outputs.response }}" | sed -e 's/[\/&]/\\&/g' -e ':a' -e '$!{N;ba' -e '}' -e 's/\n/\\n/g')
+          # Escape special characters in the response
+          escaped_response=$(printf '%s\n' "${{ steps.ollama.outputs.response }}" | sed -e 's/[\/&]/\\&/g')
           sed -i "s~QUOTE_PLACEHOLDER~${escaped_response}~g" email.html
-          # Read file and output
-          echo "html_content=$(cat email.html)" >> $GITHUB_OUTPUT
+          # Output multi-line HTML using GitHub Actions EOF format
+          echo "html_content<<HTMLEOF" >> $GITHUB_OUTPUT
+          cat email.html >> $GITHUB_OUTPUT
+          echo "HTMLEOF" >> $GITHUB_OUTPUT
 
       - name: Send Quote via Email
         uses: dawidd6/action-send-mail@v3
