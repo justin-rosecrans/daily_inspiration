@@ -19,17 +19,25 @@ jobs:
           prompt: |
             Generate one short, original, deeply inspiring quote for the day.
             Include a brief 1-sentence reflection on how to apply it today.
-            Return only an HTML fragment using this exact structure, replacing
-            the bracketed text with your own words:
-            Do not include markdown, code fences, conversational filler, or introductory text.
+            Return your response in this exact format with no other text:
+            
+            QUOTE: [your inspiring quote here]
+            REFLECTION: [your 1-sentence reflection here]
 
       - name: Create Email Body
         id: email
         run: |
           # Save the response to a temporary file
-          cat > quote.txt << 'QUOTE'
+          cat > response.txt << 'RESPONSE'
           ${{ steps.ollama.outputs.response }}
-          QUOTE
+          RESPONSE
+          
+          # Parse quote and reflection from the response
+          QUOTE=$(grep -oP 'QUOTE:\s*\K.*' response.txt | head -1)
+          REFLECTION=$(grep -oP 'REFLECTION:\s*\K.*' response.txt | head -1)
+          
+          # Generate today's date in the format "Day, MM-DD-YYYY"
+          TODAY_DATE=$(date '+%A, %m-%d-%Y')
           
           # Create the email template
           cat > email.html << 'EOF'
@@ -41,13 +49,20 @@ jobs:
                   <td align="center" style="padding: 40px 16px;">
                     <table role="presentation" style="width: 100%; max-width: 560px; border-collapse: collapse; background-color: #ffffff;">
                       <tr>
-                        <td style="padding: 36px 32px; border-top: 5px solid #6d63c8;">
-                          <p style="margin: 0 0 24px; font-size: 12px; font-weight: bold; letter-spacing: 2px; color: #6d63c8;">DAILY INSPIRATION</p>
-          EOF
-          
-          cat quote.txt >> email.html
-          
-          cat >> email.html << 'EOF'
+                        <td style="padding: 36px 32px; border-top: 5px solid #6d63c8; display: flex; justify-content: space-between; align-items: center;">
+                          <div>
+                            <p style="margin: 0 0 24px; font-size: 12px; font-weight: bold; letter-spacing: 2px; color: #6d63c8;">DAILY INSPIRATION</p>
+                          </div>
+                          <p style="margin: 0; font-size: 12px; color: #8a94a6; text-align: right;">TODAY_DATE_PLACEHOLDER</p>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 0 32px 32px 32px;">
+                          <h3 style="margin: 0 0 16px 0; font-size: 14px; font-weight: bold; color: #2d3748;">Quote of the Day</h3>
+                          <p style="margin: 0 0 24px 0; font-size: 16px; font-style: italic; color: #4a5568; line-height: 1.6;">QUOTE_PLACEHOLDER</p>
+                          
+                          <h3 style="margin: 24px 0 16px 0; font-size: 14px; font-weight: bold; color: #2d3748;">Reflection of the Day</h3>
+                          <p style="margin: 0 0 24px 0; font-size: 14px; color: #4a5568; line-height: 1.6;">REFLECTION_PLACEHOLDER</p>
                         </td>
                       </tr>
                     </table>
@@ -58,6 +73,11 @@ jobs:
             </body>
           </html>
           EOF
+          
+          # Replace placeholders
+          sed -i "s|TODAY_DATE_PLACEHOLDER|$TODAY_DATE|g" email.html
+          sed -i "s|QUOTE_PLACEHOLDER|$QUOTE|g" email.html
+          sed -i "s|REFLECTION_PLACEHOLDER|$REFLECTION|g" email.html
           
           # Output multi-line HTML using GitHub Actions EOF format
           echo "html_content<<HTMLEOF" >> $GITHUB_OUTPUT
