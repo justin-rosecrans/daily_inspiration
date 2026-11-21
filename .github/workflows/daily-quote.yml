@@ -88,14 +88,11 @@ jobs:
           # Replace date placeholder
           sed -i "s~TODAY_DATE_PLACEHOLDER~$TODAY_DATE~g" email.html
           
-          # Replace quote and reflection using sed with file input (avoids escaping issues)
-          sed -i '/QUOTE_PLACEHOLDER/{r quote.txt
-          d
-          }' email.html
+          # Replace quote using awk to avoid sed multiline issues
+          awk '/QUOTE_PLACEHOLDER/ {system("cat quote.txt"); next} 1' email.html > email_tmp.html && mv email_tmp.html email.html
           
-          sed -i '/REFLECTION_PLACEHOLDER/{r reflection.txt
-          d
-          }' email.html
+          # Replace reflection using awk
+          awk '/REFLECTION_PLACEHOLDER/ {system("cat reflection.txt"); next} 1' email.html > email_tmp.html && mv email_tmp.html email.html
 
           # Output multi-line HTML using GitHub Actions EOF format
           echo "html_content<<HTMLEOF" >> $GITHUB_OUTPUT
