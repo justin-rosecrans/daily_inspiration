@@ -14,7 +14,7 @@ jobs:
         id: ollama
         uses: ai-action/ollama-action@v2
         with:
-          model: qwen3:4b
+          model: qwen3:0.6b
           cache: true
           prompt: |
             Generate one short, original, deeply inspiring quote for the day.
@@ -49,7 +49,9 @@ jobs:
           </html>
           EOF
           # Replace placeholder with actual quote from Ollama
-          sed -i "s~QUOTE_PLACEHOLDER~${{ steps.ollama.outputs.response }}~g" email.html
+          # Escape special characters and newlines in the response
+          escaped_response=$(printf '%s\n' "${{ steps.ollama.outputs.response }}" | sed -e 's/[\/&]/\\&/g' -e ':a' -e '$!{N;ba' -e '}' -e 's/\n/\\n/g')
+          sed -i "s~QUOTE_PLACEHOLDER~${escaped_response}~g" email.html
           # Read file and output
           echo "html_content=$(cat email.html)" >> $GITHUB_OUTPUT
 
