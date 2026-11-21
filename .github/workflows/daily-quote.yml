@@ -1,0 +1,35 @@
+name: Daily Inspirational Quote
+
+on:
+  schedule:
+    # Runs every day at 13:00 UTC (7:00 AM CST / 8:00 AM CDT)
+    - cron: "0 13 * * *"
+  workflow_dispatch: # Allows you to trigger a test run manually from the Actions tab
+
+jobs:
+  send-quote:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate Inspirational Quote with Ollama
+        id: ollama
+        uses: ai-action/ollama-action@v2
+        with:
+          model: qwen3:4b
+          cache: true
+          prompt: |
+            Generate one short, original, deeply inspiring quote for the day.
+            Include a brief 1-sentence reflection on how to apply it today.
+            Do not include conversational filler or introductory text.
+
+      - name: Send Quote via Email
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          subject: "Your Daily Inspiration"
+          to: ${{ secrets.MAIL_TO }}
+          from: "Daily Spark <${{ secrets.MAIL_USERNAME }}>"
+          body: ${{ steps.ollama.outputs.response }}
