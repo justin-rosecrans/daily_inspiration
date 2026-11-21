@@ -18,8 +18,10 @@ jobs:
           cache: true
           prompt: |
             Generate one short, original, deeply inspiring quote for the day.
-            Include a brief 1-sentence reflection on how to apply it today.
-            Do not include conversational filler or introductory text.
+            Return only an HTML fragment with the quote at the top in a paragraph.
+            Below it, include one brief sentence explaining the thought behind
+            the quote in a paragraph with inline style="font-size: 12px;".
+            Do not include markdown, code fences, conversational filler, or introductory text.
 
       - name: Send Quote via Email
         uses: dawidd6/action-send-mail@v3
@@ -32,4 +34,4 @@ jobs:
           subject: "Your Daily Inspiration"
           to: ${{ secrets.MAIL_TO }}
           from: "Daily Spark <${{ secrets.MAIL_USERNAME }}>"
-          body: ${{ steps.ollama.outputs.response }}
+          html_body: ${{ steps.ollama.outputs.response }}
