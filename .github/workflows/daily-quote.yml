@@ -14,12 +14,55 @@ jobs:
         id: ollama
         uses: ai-action/ollama-action@v2
         with:
-          model: qwen3:4b
+          model: qwen3:0.6b
           cache: true
           prompt: |
             Generate one short, original, deeply inspiring quote for the day.
             Include a brief 1-sentence reflection on how to apply it today.
-            Do not include conversational filler or introductory text.
+            Return only an HTML fragment using this exact structure, replacing
+            the bracketed text with your own words:
+            Do not include markdown, code fences, conversational filler, or introductory text.
+
+      - name: Create Email Body
+        id: email
+        run: |
+          # Save the response to a temporary file
+          cat > quote.txt << 'QUOTE'
+          ${{ steps.ollama.outputs.response }}
+          QUOTE
+          
+          # Create the email template
+          cat > email.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+            <body style="margin: 0; padding: 0; background-color: #f3f5fa; font-family: Arial, sans-serif;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f5fa;">
+                <tr>
+                  <td align="center" style="padding: 40px 16px;">
+                    <table role="presentation" style="width: 100%; max-width: 560px; border-collapse: collapse; background-color: #ffffff;">
+                      <tr>
+                        <td style="padding: 36px 32px; border-top: 5px solid #6d63c8;">
+                          <p style="margin: 0 0 24px; font-size: 12px; font-weight: bold; letter-spacing: 2px; color: #6d63c8;">DAILY INSPIRATION</p>
+          EOF
+          
+          cat quote.txt >> email.html
+          
+          cat >> email.html << 'EOF'
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin: 20px 0 0; font-size: 12px; color: #8a94a6;">A little inspiration for your day.</p>
+                  </td>
+                </tr>
+              </table>
+            </body>
+          </html>
+          EOF
+          
+          # Output multi-line HTML using GitHub Actions EOF format
+          echo "html_content<<HTMLEOF" >> $GITHUB_OUTPUT
+          cat email.html >> $GITHUB_OUTPUT
+          echo "HTMLEOF" >> $GITHUB_OUTPUT
 
       - name: Send Quote via Email
         uses: dawidd6/action-send-mail@v3
@@ -32,4 +75,4 @@ jobs:
           subject: "Your Daily Inspiration"
           to: ${{ secrets.MAIL_TO }}
           from: "Daily Spark <${{ secrets.MAIL_USERNAME }}>"
-          body: ${{ steps.ollama.outputs.response }}
+          html_body: ${{ steps.email.outputs.html_content }}
