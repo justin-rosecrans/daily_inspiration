@@ -22,10 +22,12 @@ jobs:
           prompt: |
             Generate one short, original, deeply inspiring quote for the day.
             Include a brief 1-sentence reflection on how to apply it today.
+            IMPORTANT: Do NOT repeat any phrases or sentences. Each sentence must be unique.
+            Keep the quote to 1-2 sentences maximum. Keep the reflection to exactly 1 sentence.
             Return your response in this exact format with no other text:
 
-            QUOTE: [your inspiring quote here]
-            REFLECTION: [your 1-sentence reflection here]
+            QUOTE: [your inspiring quote here - no repetition]
+            REFLECTION: [your 1-sentence reflection here - no repetition]
 
       - name: Create Email Body
         id: email
