@@ -5,6 +5,9 @@ on:
     # Runs every day at 13:00 UTC (7:00 AM CST / 8:00 AM CDT)
     - cron: "0 13 * * *"
   workflow_dispatch: # Allows you to trigger a test run manually from the Actions tab
+  push:
+    branches:
+      - main
 
 jobs:
   send-quote:
