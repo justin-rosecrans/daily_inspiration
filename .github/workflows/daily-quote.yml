@@ -49,7 +49,7 @@ jobs:
           </html>
           EOF
           # Replace placeholder with actual quote from Ollama
-          sed -i "s|QUOTE_PLACEHOLDER|${{ steps.ollama.outputs.response }}|g" email.html
+          sed -i "s~QUOTE_PLACEHOLDER~${{ steps.ollama.outputs.response }}~g" email.html
           # Read file and output
           echo "html_content=$(cat email.html)" >> $GITHUB_OUTPUT
 
