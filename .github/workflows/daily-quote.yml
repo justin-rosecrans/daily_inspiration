@@ -21,8 +21,6 @@ jobs:
             Include a brief 1-sentence reflection on how to apply it today.
             Return only an HTML fragment using this exact structure, replacing
             the bracketed text with your own words:
-            <p style="margin: 0 0 24px; font-size: 24px; line-height: 1.5; font-weight: bold; color: #23304a;">[quote]</p>
-            <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #667085;">[reflection]</p>
             Do not include markdown, code fences, conversational filler, or introductory text.
 
       - name: Create Email Body
