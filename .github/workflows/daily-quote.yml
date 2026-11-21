@@ -26,6 +26,12 @@ jobs:
       - name: Create Email Body
         id: email
         run: |
+          # Save the response to a temporary file
+          cat > quote.txt << 'QUOTE'
+          ${{ steps.ollama.outputs.response }}
+          QUOTE
+          
+          # Create the email template
           cat > email.html << 'EOF'
           <!DOCTYPE html>
           <html lang="en">
@@ -37,7 +43,11 @@ jobs:
                       <tr>
                         <td style="padding: 36px 32px; border-top: 5px solid #6d63c8;">
                           <p style="margin: 0 0 24px; font-size: 12px; font-weight: bold; letter-spacing: 2px; color: #6d63c8;">DAILY INSPIRATION</p>
-                          QUOTE_PLACEHOLDER
+          EOF
+          
+          cat quote.txt >> email.html
+          
+          cat >> email.html << 'EOF'
                         </td>
                       </tr>
                     </table>
@@ -48,14 +58,7 @@ jobs:
             </body>
           </html>
           EOF
-          # Save the response to a temporary file and use it in sed
-          cat > quote.txt << 'QUOTE'
-          ${{ steps.ollama.outputs.response }}
-          QUOTE
-          # Use sed to insert the quote from file (avoids escaping issues)
-          sed -i '/QUOTE_PLACEHOLDER/{r quote.txt
-          d
-          }' email.html
+          
           # Output multi-line HTML using GitHub Actions EOF format
           echo "html_content<<HTMLEOF" >> $GITHUB_OUTPUT
           cat email.html >> $GITHUB_OUTPUT
