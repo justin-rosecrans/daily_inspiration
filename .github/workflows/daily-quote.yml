@@ -32,9 +32,9 @@ jobs:
           ${{ steps.ollama.outputs.response }}
           RESPONSE
 
-          # Parse quote and reflection from the response
-          QUOTE=$(grep -oP 'QUOTE:\s*\K.*' response.txt | head -1)
-          REFLECTION=$(grep -oP 'REFLECTION:\s*\K.*' response.txt | head -1)
+          # Parse quote and reflection from the response using sed
+          QUOTE=$(sed -n 's/^QUOTE:\s*//p' response.txt)
+          REFLECTION=$(sed -n 's/^REFLECTION:\s*//p' response.txt)
 
           # Generate today's date in the format "Day, MM-DD-YYYY"
           TODAY_DATE=$(date '+%A, %m-%d-%Y')
@@ -80,10 +80,10 @@ jobs:
           </html>
           EOF
 
-          # Replace placeholders
+          # Replace placeholders (escaping special characters)
           sed -i "s|TODAY_DATE_PLACEHOLDER|$TODAY_DATE|g" email.html
-          sed -i "s|QUOTE_PLACEHOLDER|$QUOTE|g" email.html
-          sed -i "s|REFLECTION_PLACEHOLDER|$REFLECTION|g" email.html
+          sed -i "s|QUOTE_PLACEHOLDER|${QUOTE//|/\\|}|g" email.html
+          sed -i "s|REFLECTION_PLACEHOLDER|${REFLECTION//|/\\|}|g" email.html
 
           # Output multi-line HTML using GitHub Actions EOF format
           echo "html_content<<HTMLEOF" >> $GITHUB_OUTPUT
