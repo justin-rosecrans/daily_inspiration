@@ -33,8 +33,8 @@ jobs:
           RESPONSE
 
           # Parse quote and reflection from the response using sed
-          QUOTE=$(sed -n 's/^QUOTE:\s*//p' response.txt)
-          REFLECTION=$(sed -n 's/^REFLECTION:\s*//p' response.txt)
+          sed -n 's/^QUOTE:\s*//p' response.txt > quote.txt
+          sed -n 's/^REFLECTION:\s*//p' response.txt > reflection.txt
 
           # Generate today's date in the format "Day, MM-DD-YYYY"
           TODAY_DATE=$(date '+%A, %m-%d-%Y')
@@ -80,10 +80,17 @@ jobs:
           </html>
           EOF
 
-          # Replace placeholders (escaping special characters)
-          sed -i "s|TODAY_DATE_PLACEHOLDER|$TODAY_DATE|g" email.html
-          sed -i "s|QUOTE_PLACEHOLDER|${QUOTE//|/\\|}|g" email.html
-          sed -i "s|REFLECTION_PLACEHOLDER|${REFLECTION//|/\\|}|g" email.html
+          # Replace date placeholder
+          sed -i "s~TODAY_DATE_PLACEHOLDER~$TODAY_DATE~g" email.html
+          
+          # Replace quote and reflection using sed with file input (avoids escaping issues)
+          sed -i '/QUOTE_PLACEHOLDER/{r quote.txt
+          d
+          }' email.html
+          
+          sed -i '/REFLECTION_PLACEHOLDER/{r reflection.txt
+          d
+          }' email.html
 
           # Output multi-line HTML using GitHub Actions EOF format
           echo "html_content<<HTMLEOF" >> $GITHUB_OUTPUT
