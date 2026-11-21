@@ -48,10 +48,14 @@ jobs:
             </body>
           </html>
           EOF
-          # Replace placeholder with actual quote from Ollama
-          # Escape special characters in the response
-          escaped_response=$(printf '%s\n' "${{ steps.ollama.outputs.response }}" | sed -e 's/[\/&]/\\&/g')
-          sed -i "s~QUOTE_PLACEHOLDER~${escaped_response}~g" email.html
+          # Save the response to a temporary file and use it in sed
+          cat > quote.txt << 'QUOTE'
+          ${{ steps.ollama.outputs.response }}
+          QUOTE
+          # Use sed to insert the quote from file (avoids escaping issues)
+          sed -i '/QUOTE_PLACEHOLDER/{r quote.txt
+          d
+          }' email.html
           # Output multi-line HTML using GitHub Actions EOF format
           echo "html_content<<HTMLEOF" >> $GITHUB_OUTPUT
           cat email.html >> $GITHUB_OUTPUT
