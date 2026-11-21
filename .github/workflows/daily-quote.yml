@@ -41,6 +41,14 @@ jobs:
           sed -n 's/^QUOTE:\s*//p' response.txt > quote.txt
           sed -n 's/^REFLECTION:\s*//p' response.txt > reflection.txt
 
+          # Debug: show what we parsed
+          echo "Quote file contents:"
+          cat quote.txt
+          echo "---"
+          echo "Reflection file contents:"
+          cat reflection.txt
+          echo "---"
+
           # Generate today's date in the format "Day, MM-DD-YYYY"
           TODAY_DATE=$(date '+%A, %m-%d-%Y')
 
@@ -88,16 +96,22 @@ jobs:
           # Replace date placeholder
           sed -i "s~TODAY_DATE_PLACEHOLDER~$TODAY_DATE~g" email.html
           
-          # Replace quote using awk to avoid sed multiline issues
-          awk '/QUOTE_PLACEHOLDER/ {system("cat quote.txt"); next} 1' email.html > email_tmp.html && mv email_tmp.html email.html
+          # Replace placeholders using sed with temporary file for each
+          sed -i "/QUOTE_PLACEHOLDER/r quote.txt" email.html
+          sed -i "/QUOTE_PLACEHOLDER/d" email.html
           
-          # Replace reflection using awk
-          awk '/REFLECTION_PLACEHOLDER/ {system("cat reflection.txt"); next} 1' email.html > email_tmp.html && mv email_tmp.html email.html
+          sed -i "/REFLECTION_PLACEHOLDER/r reflection.txt" email.html
+          sed -i "/REFLECTION_PLACEHOLDER/d" email.html
 
-          # Output multi-line HTML using GitHub Actions EOF format
-          echo "html_content<<HTMLEOF" >> $GITHUB_OUTPUT
-          cat email.html >> $GITHUB_OUTPUT
-          echo "HTMLEOF" >> $GITHUB_OUTPUT
+          # Store the entire HTML content in a file for the action
+          cat email.html > email_body.txt
+
+          # Output the HTML content for use in the email action
+          {
+            echo 'html_content<<HTMLEOF'
+            cat email.html
+            echo 'HTMLEOF'
+          } >> $GITHUB_OUTPUT
 
       - name: Send Quote via Email
         uses: dawidd6/action-send-mail@v3
