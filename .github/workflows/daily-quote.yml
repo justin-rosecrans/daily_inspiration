@@ -58,14 +58,7 @@ jobs:
             </body>
           </html>
           EOF
-<<<<<<< HEAD
           
-=======
-          # Replace placeholder with actual quote from Ollama
-          # Escape special characters in the response
-          escaped_response=$(printf '%s\n' "${{ steps.ollama.outputs.response }}" | sed -e 's/[\/&]/\\&/g')
-          sed -i "s~QUOTE_PLACEHOLDER~${escaped_response}~g" email.html
->>>>>>> parent of 245e426 (new-design)
           # Output multi-line HTML using GitHub Actions EOF format
           echo "html_content<<HTMLEOF" >> $GITHUB_OUTPUT
           cat email.html >> $GITHUB_OUTPUT
