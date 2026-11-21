@@ -19,7 +19,11 @@ jobs:
           prompt: |
             Generate one short, original, deeply inspiring quote for the day.
             Include a brief 1-sentence reflection on how to apply it today.
-            Do not include conversational filler or introductory text.
+            Return only an HTML fragment using this exact structure, replacing
+            the bracketed text with your own words:
+            <p style="margin: 0 0 24px; font-size: 24px; line-height: 1.5; font-weight: bold; color: #23304a;">[quote]</p>
+            <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #667085;">[reflection]</p>
+            Do not include markdown, code fences, conversational filler, or introductory text.
 
       - name: Send Quote via Email
         uses: dawidd6/action-send-mail@v3
@@ -32,4 +36,24 @@ jobs:
           subject: "Your Daily Inspiration"
           to: ${{ secrets.MAIL_TO }}
           from: "Daily Spark <${{ secrets.MAIL_USERNAME }}>"
-          body: ${{ steps.ollama.outputs.response }}
+          html_body: |
+            <!DOCTYPE html>
+            <html lang="en">
+              <body style="margin: 0; padding: 0; background-color: #f3f5fa; font-family: Arial, sans-serif;">
+                <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f5fa;">
+                  <tr>
+                    <td align="center" style="padding: 40px 16px;">
+                      <table role="presentation" style="width: 100%; max-width: 560px; border-collapse: collapse; background-color: #ffffff;">
+                        <tr>
+                          <td style="padding: 36px 32px; border-top: 5px solid #6d63c8;">
+                            <p style="margin: 0 0 24px; font-size: 12px; font-weight: bold; letter-spacing: 2px; color: #6d63c8;">DAILY INSPIRATION</p>
+                            ${{ steps.ollama.outputs.response }}
+                          </td>
+                        </tr>
+                      </table>
+                      <p style="margin: 20px 0 0; font-size: 12px; color: #8a94a6;">A little inspiration for your day.</p>
+                    </td>
+                  </tr>
+                </table>
+              </body>
+            </html>
