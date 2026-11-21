@@ -25,6 +25,36 @@ jobs:
             <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #667085;">[reflection]</p>
             Do not include markdown, code fences, conversational filler, or introductory text.
 
+      - name: Create Email Body
+        id: email
+        run: |
+          cat > email.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+            <body style="margin: 0; padding: 0; background-color: #f3f5fa; font-family: Arial, sans-serif;">
+              <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f5fa;">
+                <tr>
+                  <td align="center" style="padding: 40px 16px;">
+                    <table role="presentation" style="width: 100%; max-width: 560px; border-collapse: collapse; background-color: #ffffff;">
+                      <tr>
+                        <td style="padding: 36px 32px; border-top: 5px solid #6d63c8;">
+                          <p style="margin: 0 0 24px; font-size: 12px; font-weight: bold; letter-spacing: 2px; color: #6d63c8;">DAILY INSPIRATION</p>
+                          QUOTE_PLACEHOLDER
+                        </td>
+                      </tr>
+                    </table>
+                    <p style="margin: 20px 0 0; font-size: 12px; color: #8a94a6;">A little inspiration for your day.</p>
+                  </td>
+                </tr>
+              </table>
+            </body>
+          </html>
+          EOF
+          # Replace placeholder with actual quote from Ollama
+          sed -i "s|QUOTE_PLACEHOLDER|${{ steps.ollama.outputs.response }}|g" email.html
+          # Read file and output
+          echo "html_content=$(cat email.html)" >> $GITHUB_OUTPUT
+
       - name: Send Quote via Email
         uses: dawidd6/action-send-mail@v3
         with:
@@ -36,24 +66,4 @@ jobs:
           subject: "Your Daily Inspiration"
           to: ${{ secrets.MAIL_TO }}
           from: "Daily Spark <${{ secrets.MAIL_USERNAME }}>"
-          html_body: |
-            <!DOCTYPE html>
-            <html lang="en">
-              <body style="margin: 0; padding: 0; background-color: #f3f5fa; font-family: Arial, sans-serif;">
-                <table role="presentation" style="width: 100%; border-collapse: collapse; background-color: #f3f5fa;">
-                  <tr>
-                    <td align="center" style="padding: 40px 16px;">
-                      <table role="presentation" style="width: 100%; max-width: 560px; border-collapse: collapse; background-color: #ffffff;">
-                        <tr>
-                          <td style="padding: 36px 32px; border-top: 5px solid #6d63c8;">
-                            <p style="margin: 0 0 24px; font-size: 12px; font-weight: bold; letter-spacing: 2px; color: #6d63c8;">DAILY INSPIRATION</p>
-                            ${{ steps.ollama.outputs.response }}
-                          </td>
-                        </tr>
-                      </table>
-                      <p style="margin: 20px 0 0; font-size: 12px; color: #8a94a6;">A little inspiration for your day.</p>
-                    </td>
-                  </tr>
-                </table>
-              </body>
-            </html>
+          html_body: ${{ steps.email.outputs.html_content }}
