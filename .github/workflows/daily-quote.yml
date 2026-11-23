@@ -2,8 +2,8 @@ name: Daily Inspirational Quote
 
 on:
   schedule:
-    # Runs every day at 13:00 UTC (7:00 AM CST / 8:00 AM CDT)
-    - cron: "0 13 * * *"
+    # Runs every day at 12:00 UTC (6:00 AM CST / 7:00 AM CDT)
+    - cron: "0 12 * * *"
   workflow_dispatch: # Allows you to trigger a test run manually from the Actions tab
   push:
     branches:
@@ -93,14 +93,15 @@ jobs:
           </html>
           EOF
 
-          # Escape special characters for sed replacement
-          QUOTE_ESCAPED=$(printf '%s\n' "$QUOTE" | sed -e 's/[\/&]/\\&/g')
-          REFLECTION_ESCAPED=$(printf '%s\n' "$REFLECTION" | sed -e 's/[\/&]/\\&/g')
+          # Escape special characters for sed replacement (escape all special regex chars)
+          QUOTE_ESCAPED=$(printf '%s\n' "$QUOTE" | sed -e 's/[&/\]/\\&/g' | sed -e 's/$/\\n/g' | tr -d '\n')
+          REFLECTION_ESCAPED=$(printf '%s\n' "$REFLECTION" | sed -e 's/[&/\]/\\&/g' | sed -e 's/$/\\n/g' | tr -d '\n')
+          TODAY_DATE_ESCAPED=$(printf '%s\n' "$TODAY_DATE" | sed -e 's/[&/\]/\\&/g')
 
-          # Replace placeholders
-          sed -i "s~TODAY_DATE_PLACEHOLDER~$TODAY_DATE~g" email.html
-          sed -i "s~QUOTE_PLACEHOLDER~$QUOTE_ESCAPED~g" email.html
-          sed -i "s~REFLECTION_PLACEHOLDER~$REFLECTION_ESCAPED~g" email.html
+          # Replace placeholders using | delimiter to avoid conflicts with ~
+          sed -i "s|TODAY_DATE_PLACEHOLDER|$TODAY_DATE_ESCAPED|g" email.html
+          sed -i "s|QUOTE_PLACEHOLDER|$QUOTE_ESCAPED|g" email.html
+          sed -i "s|REFLECTION_PLACEHOLDER|$REFLECTION_ESCAPED|g" email.html
 
           # Output the HTML content for use in the email action
           {
