@@ -93,15 +93,15 @@ jobs:
           </html>
           EOF
 
-          # Escape special characters for sed replacement (escape all special regex chars)
-          QUOTE_ESCAPED=$(printf '%s\n' "$QUOTE" | sed -e 's/[&/\]/\\&/g' | sed -e 's/$/\\n/g' | tr -d '\n')
-          REFLECTION_ESCAPED=$(printf '%s\n' "$REFLECTION" | sed -e 's/[&/\]/\\&/g' | sed -e 's/$/\\n/g' | tr -d '\n')
+          # Escape special characters for sed replacement
+          QUOTE_ESCAPED=$(printf '%s\n' "$QUOTE" | sed -e 's/[&/\]/\\&/g')
+          REFLECTION_ESCAPED=$(printf '%s\n' "$REFLECTION" | sed -e 's/[&/\]/\\&/g')
           TODAY_DATE_ESCAPED=$(printf '%s\n' "$TODAY_DATE" | sed -e 's/[&/\]/\\&/g')
 
-          # Replace placeholders using | delimiter to avoid conflicts with ~
-          sed -i "s|TODAY_DATE_PLACEHOLDER|$TODAY_DATE_ESCAPED|g" email.html
-          sed -i "s|QUOTE_PLACEHOLDER|$QUOTE_ESCAPED|g" email.html
-          sed -i "s|REFLECTION_PLACEHOLDER|$REFLECTION_ESCAPED|g" email.html
+          # Replace placeholders using sed (single pass for each)
+          sed -i "s|TODAY_DATE_PLACEHOLDER|$TODAY_DATE_ESCAPED|" email.html
+          sed -i "s|QUOTE_PLACEHOLDER|$QUOTE_ESCAPED|" email.html
+          sed -i "s|REFLECTION_PLACEHOLDER|$REFLECTION_ESCAPED|" email.html
 
           # Output the HTML content for use in the email action
           {
